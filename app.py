@@ -1,3 +1,7 @@
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"   # Force CPU, ignore GPUs
+
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from PIL import Image
