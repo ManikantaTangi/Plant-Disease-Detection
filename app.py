@@ -14,10 +14,26 @@ MODEL_PATH = "plant_disease_model.keras"
 
 # Replace with your actual trained class names
 class_names = [
-    'Apple___Black_rot',
-    'Tomato___Healthy',
-    'Potato___Early_blight'
-    # Add all remaining class names here (no "..." placeholder)
+    'Pepper__bell___Bacterial_spot',
+'Pepper__bell___healthy',
+'Potato___Early_blight',
+'Potato___healthy',
+'Potato___Late_blight',
+'Tomato_Bacterial_spot',
+'Tomato_Early_blight',
+'Tomato_healthy',
+'Tomato_Late_blight',
+'Tomato_Leaf_Mold',
+'Pepper__bell___Bacterial_spot',
+'Pepper__bell___healthy',
+'Potato___Early_blight',
+'Potato___healthy',
+'Potato___Late_blight',
+'Tomato_Bacterial_spot',
+'Tomato_Early_blight',
+'Tomato_healthy',
+'Tomato_Late_blight',
+'Tomato_Leaf_Mold'
 ]
 
 # Lazy-loaded model
