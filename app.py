@@ -4,41 +4,58 @@ import tensorflow as tf
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from PIL import Image
+import requests  # <-- added for downloading from GitHub
 
 app = Flask(__name__)
 CORS(app)
 
+# ----------------------------
 # Constants
+# ----------------------------
 IMG_SIZE = 224
 MODEL_PATH = "plant_disease_model.keras"
+GITHUB_URL = "https://github.com/ManikantaTangi/Plant-Disease-Detection/raw/main/plant_disease_model.keras"
 
+# ----------------------------
+# Step 0: Download model if not present
+# ----------------------------
+if not os.path.exists(MODEL_PATH):
+    print("⬇️ Downloading model from GitHub...")
+    r = requests.get(GITHUB_URL)
+    with open(MODEL_PATH, "wb") as f:
+        f.write(r.content)
+    print("✅ Download complete.")
+
+# ----------------------------
 # Replace with your actual trained class names
+# ----------------------------
 class_names = [
     'Pepper__bell___Bacterial_spot',
-'Pepper__bell___healthy',
-'Potato___Early_blight',
-'Potato___healthy',
-'Potato___Late_blight',
-'Tomato_Bacterial_spot',
-'Tomato_Early_blight',
-'Tomato_healthy',
-'Tomato_Late_blight',
-'Tomato_Leaf_Mold',
-'Pepper__bell___Bacterial_spot',
-'Pepper__bell___healthy',
-'Potato___Early_blight',
-'Potato___healthy',
-'Potato___Late_blight',
-'Tomato_Bacterial_spot',
-'Tomato_Early_blight',
-'Tomato_healthy',
-'Tomato_Late_blight',
-'Tomato_Leaf_Mold'
+    'Pepper__bell___healthy',
+    'Potato___Early_blight',
+    'Potato___healthy',
+    'Potato___Late_blight',
+    'Tomato_Bacterial_spot',
+    'Tomato_Early_blight',
+    'Tomato_healthy',
+    'Tomato_Late_blight',
+    'Tomato_Leaf_Mold',
+    'Pepper__bell___Bacterial_spot',
+    'Pepper__bell___healthy',
+    'Potato___Early_blight',
+    'Potato___healthy',
+    'Potato___Late_blight',
+    'Tomato_Bacterial_spot',
+    'Tomato_Early_blight',
+    'Tomato_healthy',
+    'Tomato_Late_blight',
+    'Tomato_Leaf_Mold'
 ]
 
+# ----------------------------
 # Lazy-loaded model
+# ----------------------------
 model = None
-
 
 def load_model():
     """Load the TensorFlow model once."""
@@ -49,11 +66,12 @@ def load_model():
         print("✅ Model loaded successfully!")
     return model
 
-
+# ----------------------------
+# Routes
+# ----------------------------
 @app.route('/')
 def home():
     return jsonify({'message': '✅ Plant Disease Detection API is running!'}), 200
-
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -95,12 +113,13 @@ def predict():
         print("❌ Error during prediction:", str(e))
         return jsonify({'error': f'Internal server error: {str(e)}'}), 500
 
-
 @app.route('/health', methods=['GET'])
 def health():
     """Simple health check for Render."""
     return jsonify({'status': 'ok'}), 200
 
-
+# ----------------------------
+# Run app
+# ----------------------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
