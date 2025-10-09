@@ -1,78 +1,3 @@
-import os
-import numpy as np
-import tensorflow as tf
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-from PIL import Image
-import requests  # <-- added for downloading from GitHub
-
-app = Flask(__name__)
-CORS(app)
-
-# ----------------------------
-# Constants
-# ----------------------------
-IMG_SIZE = 224
-MODEL_PATH = "plant_disease_model.keras"
-GITHUB_URL = "https://github.com/ManikantaTangi/Plant-Disease-Detection/raw/main/plant_disease_model.keras"
-
-# ----------------------------
-# Step 0: Download model if not present
-# ----------------------------
-if not os.path.exists(MODEL_PATH):
-    print("⬇️ Downloading model from GitHub...")
-    r = requests.get(GITHUB_URL)
-    with open(MODEL_PATH, "wb") as f:
-        f.write(r.content)
-    print("✅ Download complete.")
-
-# ----------------------------
-# Replace with your actual trained class names
-# ----------------------------
-class_names = [
-    'Pepper__bell___Bacterial_spot',
-    'Pepper__bell___healthy',
-    'Potato___Early_blight',
-    'Potato___healthy',
-    'Potato___Late_blight',
-    'Tomato_Bacterial_spot',
-    'Tomato_Early_blight',
-    'Tomato_healthy',
-    'Tomato_Late_blight',
-    'Tomato_Leaf_Mold',
-    'Pepper__bell___Bacterial_spot',
-    'Pepper__bell___healthy',
-    'Potato___Early_blight',
-    'Potato___healthy',
-    'Potato___Late_blight',
-    'Tomato_Bacterial_spot',
-    'Tomato_Early_blight',
-    'Tomato_healthy',
-    'Tomato_Late_blight',
-    'Tomato_Leaf_Mold'
-]
-
-# ----------------------------
-# Lazy-loaded model
-# ----------------------------
-model = None
-
-def load_model():
-    """Load the TensorFlow model once."""
-    global model
-    if model is None:
-        print("🔄 Loading model...")
-        model = tf.keras.models.load_model(MODEL_PATH)
-        print("✅ Model loaded successfully!")
-    return model
-
-# ----------------------------
-# Routes
-# ----------------------------
-@app.route('/')
-def home():
-    return jsonify({'message': '✅ Plant Disease Detection API is running!'}), 200
-
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
@@ -100,26 +25,28 @@ def predict():
         if predictions is None or len(predictions) == 0:
             return jsonify({'error': 'Model returned no predictions'}), 500
 
-        class_idx = int(np.argmax(predictions[0]))
-        confidence = float(predictions[0][class_idx])
+        # Get top-3 predictions
+        top_indices = predictions[0].argsort()[-3:][::-1]
+        top_classes = [class_names[i] for i in top_indices]
+        top_confidences = [float(predictions[0][i]) for i in top_indices]
+
+        # Combine into list of dicts
+        top_results = [
+            {'class': top_classes[i], 'confidence': top_confidences[i]}
+            for i in range(3)
+        ]
+
+        # Best prediction (for backward compatibility)
+        best_idx = int(top_indices[0])
 
         return jsonify({
-            'class': class_names[class_idx],
-            'confidence': confidence
+            'top_3_predictions': top_results,
+            'best_prediction': {
+                'class': class_names[best_idx],
+                'confidence': float(predictions[0][best_idx])
+            }
         }), 200
 
     except Exception as e:
-        # Catch any unhandled errors so Flask doesn't crash (→ 502)
         print("❌ Error during prediction:", str(e))
         return jsonify({'error': f'Internal server error: {str(e)}'}), 500
-
-@app.route('/health', methods=['GET'])
-def health():
-    """Simple health check for Render."""
-    return jsonify({'status': 'ok'}), 200
-
-# ----------------------------
-# Run app
-# ----------------------------
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
